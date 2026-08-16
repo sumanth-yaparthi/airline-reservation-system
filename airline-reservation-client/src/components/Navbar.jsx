@@ -20,6 +20,7 @@ export default function Navbar() {
         <div className="navbar-links">
           <Link to="/">Flights</Link>
           {isAuthenticated && <Link to="/my-reservations">My Trips</Link>}
+          {isAuthenticated && <Link to="/profile">{user.fullName}</Link>}
           {user?.role === "Admin" && <Link to="/admin/flights">Manage Flights</Link>}
 
           {isAuthenticated ? (

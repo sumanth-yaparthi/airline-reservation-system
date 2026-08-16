@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import PasswordInput from "../components/PasswordInput";
 
 export default function Register() {
   const [fullName, setFullName] = useState("");
@@ -61,11 +62,11 @@ export default function Register() {
 
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input
-                type="password"
-                className="form-input"
+              <PasswordInput
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
                 minLength={6}
                 required
               />
@@ -73,13 +74,23 @@ export default function Register() {
 
             {error && <p className="form-error">{error}</p>}
 
-            <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+            <button
+              type="submit"
+              className="btn btn-primary btn-block"
+              disabled={loading}
+            >
               {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
           <p className="text-muted mt-24">
-            Already have an account? <Link to="/login" style={{ color: "var(--color-amber-dark)", fontWeight: 600 }}>Log in</Link>
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              style={{ color: "var(--color-amber-dark)", fontWeight: 600 }}
+            >
+              Log in
+            </Link>
           </p>
         </div>
       </div>
