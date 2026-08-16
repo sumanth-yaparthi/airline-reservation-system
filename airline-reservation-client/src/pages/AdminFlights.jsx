@@ -21,6 +21,10 @@ function toLocalInputValue(isoString) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function hasDeparted(departureTimeStr) {
+  return new Date(departureTimeStr) <= new Date();
+}
+
 export default function AdminFlights() {
   const { showToast } = useToast();
   const [flights, setFlights] = useState([]);
@@ -38,7 +42,9 @@ export default function AdminFlights() {
     setError("");
     try {
       // Admin management view: pull a larger page so nothing's hidden behind pagination here
-      const response = await axiosInstance.get("/flights", { params: { pageSize: ADMIN_FLIGHTS_PAGE_SIZE } });
+      const response = await axiosInstance.get("/flights", {
+        params: { pageSize: ADMIN_FLIGHTS_PAGE_SIZE },
+      });
       setFlights(response.data.items);
     } catch (err) {
       setError("Could not load flights.");
@@ -127,7 +133,12 @@ export default function AdminFlights() {
   };
 
   const handleDelete = async (flight) => {
-    if (!window.confirm(`Delete flight ${flight.flightNumber}? This can't be undone.`)) return;
+    if (
+      !window.confirm(
+        `Delete flight ${flight.flightNumber}? This can't be undone.`,
+      )
+    )
+      return;
 
     setDeletingId(flight.id);
     try {
@@ -135,7 +146,12 @@ export default function AdminFlights() {
       setFlights((prev) => prev.filter((f) => f.id !== flight.id));
       showToast(`Flight ${flight.flightNumber} deleted.`, "success", 3500);
     } catch (err) {
-      showToast(err.response?.data?.message || `Could not delete flight ${flight.flightNumber}.`, "error", 7000);
+      showToast(
+        err.response?.data?.message ||
+          `Could not delete flight ${flight.flightNumber}.`,
+        "error",
+        7000,
+      );
     } finally {
       setDeletingId(null);
     }
@@ -149,50 +165,118 @@ export default function AdminFlights() {
             <h1 className="page-title">Manage flights</h1>
             <p className="page-subtitle">Add, edit, or remove routes.</p>
           </div>
-          <button className="btn btn-primary" onClick={showForm ? closeForm : openCreateForm}>
+          <button
+            className="btn btn-primary"
+            onClick={showForm ? closeForm : openCreateForm}
+          >
             {showForm ? "Cancel" : "+ Add flight"}
           </button>
         </div>
 
         {showForm && (
-          <form onSubmit={handleSubmit} className="card" style={{ marginBottom: 32 }}>
-            <h3 style={{ marginBottom: 16 }}>{editingId ? "Edit flight" : "New flight"}</h3>
+          <form
+            onSubmit={handleSubmit}
+            className="card"
+            style={{ marginBottom: 32 }}
+          >
+            <h3 style={{ marginBottom: 16 }}>
+              {editingId ? "Edit flight" : "New flight"}
+            </h3>
 
-            <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div
+              className="grid"
+              style={{ gridTemplateColumns: "1fr 1fr", gap: 16 }}
+            >
               <div className="form-group">
                 <label className="form-label">Flight number</label>
-                <input name="flightNumber" className="form-input" value={form.flightNumber} onChange={handleChange} required />
+                <input
+                  name="flightNumber"
+                  className="form-input"
+                  value={form.flightNumber}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Price per seat</label>
-                <input name="price" type="number" step="0.01" className="form-input" value={form.price} onChange={handleChange} required />
+                <input
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  className="form-input"
+                  value={form.price}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Origin</label>
-                <input name="origin" className="form-input" value={form.origin} onChange={handleChange} required />
+                <input
+                  name="origin"
+                  className="form-input"
+                  value={form.origin}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Destination</label>
-                <input name="destination" className="form-input" value={form.destination} onChange={handleChange} required />
+                <input
+                  name="destination"
+                  className="form-input"
+                  value={form.destination}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Departure time</label>
-                <input name="departureTime" type="datetime-local" className="form-input" value={form.departureTime} onChange={handleChange} required />
+                <input
+                  name="departureTime"
+                  type="datetime-local"
+                  className="form-input"
+                  value={form.departureTime}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Arrival time</label>
-                <input name="arrivalTime" type="datetime-local" className="form-input" value={form.arrivalTime} onChange={handleChange} required />
+                <input
+                  name="arrivalTime"
+                  type="datetime-local"
+                  className="form-input"
+                  value={form.arrivalTime}
+                  onChange={handleChange}
+                  required
+                />
               </div>
 
               {!editingId && (
                 <>
                   <div className="form-group">
                     <label className="form-label">Economy seats</label>
-                    <input name="economySeats" type="number" min="0" className="form-input" value={form.economySeats} onChange={handleChange} required />
+                    <input
+                      name="economySeats"
+                      type="number"
+                      min="0"
+                      className="form-input"
+                      value={form.economySeats}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Business seats</label>
-                    <input name="businessSeats" type="number" min="0" className="form-input" value={form.businessSeats} onChange={handleChange} required />
+                    <input
+                      name="businessSeats"
+                      type="number"
+                      min="0"
+                      className="form-input"
+                      value={form.businessSeats}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                 </>
               )}
@@ -200,14 +284,23 @@ export default function AdminFlights() {
 
             {editingId && (
               <p className="text-muted" style={{ fontSize: "0.85rem" }}>
-                Seat count and class layout can't be changed after a flight is created.
+                Seat count and class layout can't be changed after a flight is
+                created.
               </p>
             )}
 
             {formError && <p className="form-error">{formError}</p>}
 
-            <button type="submit" className="btn btn-primary mt-16" disabled={submitting}>
-              {submitting ? "Saving..." : editingId ? "Save changes" : "Create flight"}
+            <button
+              type="submit"
+              className="btn btn-primary mt-16"
+              disabled={submitting}
+            >
+              {submitting
+                ? "Saving..."
+                : editingId
+                  ? "Save changes"
+                  : "Create flight"}
             </button>
           </form>
         )}
@@ -226,14 +319,33 @@ export default function AdminFlights() {
                 <span className="text-muted" style={{ marginLeft: 16 }}>
                   {flight.availableSeatsCount}/{flight.totalSeats} available
                 </span>
-                <span style={{ marginLeft: 16, fontWeight: 600, color: "var(--color-amber-dark)" }}>
+                {hasDeparted(flight.departureTime) && (
+                  <span
+                    className="badge badge-departed"
+                    style={{ marginLeft: 16 }}
+                  >
+                    Departed
+                  </span>
+                )}
+                <span
+                  style={{
+                    marginLeft: 16,
+                    fontWeight: 600,
+                    color: "var(--color-amber-dark)",
+                  }}
+                >
                   ${flight.price.toFixed(2)}
                 </span>
               </div>
               <div className="flex gap-8">
-                <button className="btn btn-outline" onClick={() => openEditForm(flight)}>
-                  Edit
-                </button>
+                {!hasDeparted(flight.departureTime) && (
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => openEditForm(flight)}
+                  >
+                    Edit
+                  </button>
+                )}
                 <button
                   className="btn btn-danger"
                   disabled={deletingId === flight.id}

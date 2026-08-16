@@ -117,8 +117,12 @@ namespace ARSBEWebApplication.Services
             var hasBookedSeat = seats.Any(s => !s.IsAvailable);
 
             if (hasBookedSeat)
-                throw new BadRequestException(
-                    $"Flight {flight.FlightNumber} ({flight.Origin} → {flight.Destination}) has one or more booked seats and cannot be deleted. Cancel all bookings first.");
+            {
+                var message = flight.DepartureTime <= DateTime.Now
+                    ? $"Flight {flight.FlightNumber} ({flight.Origin} → {flight.Destination}) has completed with active bookings and cannot be deleted. Completed flight records are permanent."
+                    : $"Flight {flight.FlightNumber} ({flight.Origin} → {flight.Destination}) has one or more booked seats and cannot be deleted. Cancel all bookings first.";
+                throw new BadRequestException(message);
+            }
 
             var reservationsForFlight = await _reservationRepository.FindAsync(r => r.FlightId == id);
             foreach (var reservation in reservationsForFlight)
@@ -175,6 +179,9 @@ namespace ARSBEWebApplication.Services
             var flight = await _flightRepository.GetByIdAsync(id);
             if (flight == null)
                 throw new NotFoundException($"Flight with ID {id} not found.");
+
+            if (flight.DepartureTime <= DateTime.Now)
+                throw new BadRequestException($"Flight {flight.FlightNumber} has already departed and cannot be edited.");
 
             if (dto.DepartureTime <= DateTime.Now)
                 throw new BadRequestException("Departure time must be in the future.");
