@@ -41,5 +41,21 @@ namespace ARSBEWebApplication.Controllers
             await _reservationService.CancelReservationAsync(userId, id);
             return NoContent();
         }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ReservationDto>> GetById(int id)
+        {
+            var userId = User.GetUserId();
+            var result = await _reservationService.GetReservationByIdAsync(userId, id);
+            return Ok(result);
+        }
+
+        [HttpGet("verify/{bookingReference}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ReservationDto>> Verify(string bookingReference)
+        {
+            var result = await _reservationService.GetByBookingReferenceAsync(bookingReference);
+            return Ok(result);
+        }
     }
 }

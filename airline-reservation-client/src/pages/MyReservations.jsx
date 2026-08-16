@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import axiosInstance from "../api/axiosInstance";
 import { useToast } from "../context/ToastContext";
+import { Link } from "react-router-dom";
 
 function formatDateTime(dateStr) {
   return new Date(dateStr).toLocaleString([], {
@@ -13,6 +14,10 @@ function formatDateTime(dateStr) {
 
 function hasDeparted(departureTimeStr) {
   return new Date(departureTimeStr) <= new Date();
+}
+
+function hasRealTicket(bookingReference) {
+  return bookingReference && !bookingReference.startsWith("LEGACY");
 }
 
 export default function MyReservations() {
@@ -119,26 +124,38 @@ export default function MyReservations() {
                 ))}
               </div>
 
-              {r.status !== "Cancelled" && !hasDeparted(r.departureTime) && (
-                <button
-                  className="btn btn-danger mt-24"
-                  disabled={cancellingId === r.id}
-                  onClick={() => handleCancel(r)}
-                >
-                  {cancellingId === r.id
-                    ? "Cancelling..."
-                    : "Cancel reservation"}
-                </button>
-              )}
+              <div className="flex gap-8 mt-24">
+                {r.status !== "Cancelled" &&
+                  hasRealTicket(r.bookingReference) && (
+                    <Link
+                      to={`/my-reservations/${r.id}/ticket`}
+                      className="btn btn-outline"
+                    >
+                      View E-Ticket
+                    </Link>
+                  )}
 
-              {r.status !== "Cancelled" && hasDeparted(r.departureTime) && (
-                <span
-                  className="badge badge-departed mt-24"
-                  style={{ display: "inline-flex" }}
-                >
-                  Flight completed
-                </span>
-              )}
+                {r.status !== "Cancelled" && !hasDeparted(r.departureTime) && (
+                  <button
+                    className="btn btn-danger"
+                    disabled={cancellingId === r.id}
+                    onClick={() => handleCancel(r)}
+                  >
+                    {cancellingId === r.id
+                      ? "Cancelling..."
+                      : "Cancel reservation"}
+                  </button>
+                )}
+
+                {r.status !== "Cancelled" && hasDeparted(r.departureTime) && (
+                  <span
+                    className="badge badge-departed"
+                    style={{ display: "inline-flex" }}
+                  >
+                    Flight completed
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>

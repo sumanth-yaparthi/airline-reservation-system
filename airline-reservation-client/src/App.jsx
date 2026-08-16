@@ -10,6 +10,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
+import ETicket from "./pages/ETicket";
+import VerifyTicket from "./pages/VerifyTicket";
 
 function App() {
   return (
@@ -42,6 +44,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/verify/:bookingReference" element={<VerifyTicket />} />
+        <Route
+          path="/my-reservations/:id/ticket"
+          element={
+            <ProtectedRoute>
+              <ETicket />
             </ProtectedRoute>
           }
         />

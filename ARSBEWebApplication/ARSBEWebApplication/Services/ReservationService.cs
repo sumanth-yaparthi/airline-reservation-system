@@ -50,6 +50,7 @@ namespace ARSBEWebApplication.Services
                 FlightId = dto.FlightId,
                 Status = "Confirmed",
                 BookingDate = DateTime.UtcNow,
+                BookingReference = GenerateBookingReference(),
                 ReservationSeats = seats.Select(s => new ReservationSeat { SeatId = s.Id }).ToList()
             };
 
@@ -94,9 +95,42 @@ namespace ARSBEWebApplication.Services
             await _reservationRepository.SaveChangesAsync();
         }
 
+        public async Task<ReservationDto> GetReservationByIdAsync(int userId, int reservationId)
+        {
+            var reservation = await _reservationRepository.GetByIdWithDetailsAsync(reservationId);
+            if (reservation == null)
+                throw new NotFoundException("Reservation not found.");
+
+            if (reservation.UserId != userId)
+                throw new UnauthorizedException("You are not allowed to view this reservation.");
+
+            return MapToDto(reservation);
+        }
+
+        public async Task<ReservationDto> GetByBookingReferenceAsync(string bookingReference)
+        {
+            var reservation = await _reservationRepository.GetByBookingReferenceAsync(bookingReference);
+            if (reservation == null)
+                throw new NotFoundException("No booking found with this reference.");
+
+            return MapToDto(reservation);
+        }
+
+        private static string GenerateBookingReference()
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O or 1/I
+            var bytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(6);
+            var code = new char[6];
+            for (int i = 0; i < 6; i++)
+                code[i] = chars[bytes[i] % chars.Length];
+            return "ARS" + new string(code);
+        }
+
         private static ReservationDto MapToDto(Reservation r) => new()
         {
             Id = r.Id,
+            BookingReference = r.BookingReference,
+            PassengerName = r.User?.FullName ?? "",
             FlightNumber = r.Flight?.FlightNumber ?? "",
             Origin = r.Flight?.Origin ?? "",
             Destination = r.Flight?.Destination ?? "",

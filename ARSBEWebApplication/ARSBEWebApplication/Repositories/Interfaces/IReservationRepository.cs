@@ -7,5 +7,6 @@ namespace ARSBEWebApplication.Repositories.Interfaces
     {
         Task<IEnumerable<Reservation>> GetByUserIdAsync(int userId);
         Task<Reservation?> GetByIdWithDetailsAsync(int id);
+        Task<Reservation?> GetByBookingReferenceAsync(string bookingReference);
     }
 }

@@ -11,11 +11,12 @@ namespace ARSBEWebApplication.Repositories
 
         public async Task<IEnumerable<Reservation>> GetByUserIdAsync(int userId) =>
             await _dbSet
-                .Include(r => r.Flight)
-                .Include(r => r.ReservationSeats)
-                    .ThenInclude(rs => rs.Seat)
-                .Where(r => r.UserId == userId)
-                .ToListAsync();
+            .Include(r => r.User)
+            .Include(r => r.Flight)
+            .Include(r => r.ReservationSeats)
+            .ThenInclude(rs => rs.Seat)
+        .Where(r => r.UserId == userId)
+        .ToListAsync();
 
         public async Task<Reservation?> GetByIdWithDetailsAsync(int id) =>
             await _dbSet
@@ -24,5 +25,13 @@ namespace ARSBEWebApplication.Repositories
                 .Include(r => r.ReservationSeats)
                     .ThenInclude(rs => rs.Seat)
                 .FirstOrDefaultAsync(r => r.Id == id);
+
+        public async Task<Reservation?> GetByBookingReferenceAsync(string bookingReference) =>
+            await _dbSet
+            .Include(r => r.User)
+            .Include(r => r.Flight)
+            .Include(r => r.ReservationSeats)
+            .ThenInclude(rs => rs.Seat)
+            .FirstOrDefaultAsync(r => r.BookingReference == bookingReference);
     }
 }

@@ -39,6 +39,10 @@ namespace ARSBEWebApplication.Data
                 .HasIndex(rs => new { rs.ReservationId, rs.SeatId })
                 .IsUnique();
 
+            modelBuilder.Entity<Reservation>()
+                .HasIndex(r => r.BookingReference)
+                .IsUnique();
+
             // ----- Column types -----
             modelBuilder.Entity<Flight>()
                 .Property(f => f.Price)

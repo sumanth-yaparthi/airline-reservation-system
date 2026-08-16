@@ -6,6 +6,8 @@ namespace ARSBEWebApplication.Models
     public class Reservation
     {
         public int Id { get; set; }
+        [MaxLength(12)]
+        public string BookingReference { get; set; } = string.Empty;
 
         public int UserId { get; set; }
         [ForeignKey(nameof(UserId))]
