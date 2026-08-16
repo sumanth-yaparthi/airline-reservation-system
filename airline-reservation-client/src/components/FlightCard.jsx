@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 function formatTime(dateStr) {
-  return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return new Date(dateStr).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 }
 
 function formatDate(dateStr) {
@@ -33,7 +33,7 @@ export default function FlightCard({ flight }) {
 
         <div className="flight-route-row">
           <div className="flight-route-point">
-            <div className="flight-route-time">{formatTime(flight.departureTime)}</div>
+            <span className="flight-route-time-value">{formatTime(flight.departureTime)}</span>
             <div className="text-muted flight-route-city">{flight.origin}</div>
             <div className="text-muted flight-route-date">{formatDate(flight.departureTime)}</div>
           </div>
@@ -41,10 +41,10 @@ export default function FlightCard({ flight }) {
           <div className="flight-route-plane">✈</div>
 
           <div className="flight-route-point flight-route-point-end">
-            <div className="flight-route-time">
+            <span className="flight-route-time-value">
               {formatTime(flight.arrivalTime)}
               {overnight && <span className="badge badge-amber flight-plusday">+1</span>}
-            </div>
+            </span>
             <div className="text-muted flight-route-city">{flight.destination}</div>
             <div className="text-muted flight-route-date">{formatDate(flight.arrivalTime)}</div>
           </div>
