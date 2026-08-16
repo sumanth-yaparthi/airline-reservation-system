@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import axiosInstance from "../api/axiosInstance";
 import FlightCard from "../components/FlightCard";
 
-const PAGE_SIZE = 6;
+import { FLIGHTS_PAGE_SIZE } from "../constants";
 
 export default function Flights() {
   const [flights, setFlights] = useState([]);
@@ -20,7 +20,7 @@ export default function Flights() {
     setError("");
     try {
       const response = await axiosInstance.get("/flights", {
-        params: { ...params, pageNumber: page, pageSize: PAGE_SIZE },
+        params: { ...params, pageNumber: page, pageSize: FLIGHTS_PAGE_SIZE },
       });
       setFlights(response.data.items);
       setTotalPages(response.data.totalPages);

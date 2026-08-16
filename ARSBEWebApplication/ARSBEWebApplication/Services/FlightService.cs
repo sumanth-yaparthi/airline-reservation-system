@@ -5,6 +5,7 @@ using ARSBEWebApplication.Models;
 using ARSBEWebApplication.Repositories;
 using ARSBEWebApplication.Repositories.Interfaces;
 using ARSBEWebApplication.Services.Interfaces;
+using ARSBEWebApplication.Helpers;
 
 namespace ARSBEWebApplication.Services
 {
@@ -87,8 +88,9 @@ namespace ARSBEWebApplication.Services
             await _flightRepository.SaveChangesAsync(); // need flight.Id before creating seats
 
             // Auto-generate seats: Business rows first (1A, 1B...), then Economy
+            var businessRowsUsed = (int)Math.Ceiling(dto.BusinessSeats / (double)SeatMapConstants.SeatsPerRow);
             var seats = GenerateSeats(flight.Id, dto.BusinessSeats, "Business", startRow: 1)
-                .Concat(GenerateSeats(flight.Id, dto.EconomySeats, "Economy", startRow: (dto.BusinessSeats / 6) + 1))
+                .Concat(GenerateSeats(flight.Id, dto.EconomySeats, "Economy", startRow: businessRowsUsed + 1))
                 .ToList();
 
             foreach (var seat in seats)
@@ -126,7 +128,6 @@ namespace ARSBEWebApplication.Services
         private static List<Seat> GenerateSeats(int flightId, int count, string seatClass, int startRow)
         {
             var seats = new List<Seat>();
-            var letters = new[] { "A", "B", "C", "D", "E", "F" };
             int row = startRow, col = 0;
 
             for (int i = 0; i < count; i++)
@@ -134,13 +135,13 @@ namespace ARSBEWebApplication.Services
                 seats.Add(new Seat
                 {
                     FlightId = flightId,
-                    SeatNumber = $"{row}{letters[col]}",
+                    SeatNumber = $"{row}{SeatMapConstants.SeatLetters[col]}",
                     SeatClass = seatClass,
                     IsAvailable = true
                 });
 
                 col++;
-                if (col == letters.Length) { col = 0; row++; }
+                if (col == SeatMapConstants.SeatLetters.Length) { col = 0; row++; }
             }
 
             return seats;

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import axiosInstance from "../api/axiosInstance";
 import { useToast } from "../context/ToastContext";
+import { ADMIN_FLIGHTS_PAGE_SIZE } from "../constants";
 
 const emptyForm = {
   flightNumber: "",
@@ -37,7 +38,7 @@ export default function AdminFlights() {
     setError("");
     try {
       // Admin management view: pull a larger page so nothing's hidden behind pagination here
-      const response = await axiosInstance.get("/flights", { params: { pageSize: 100 } });
+      const response = await axiosInstance.get("/flights", { params: { pageSize: ADMIN_FLIGHTS_PAGE_SIZE } });
       setFlights(response.data.items);
     } catch (err) {
       setError("Could not load flights.");
