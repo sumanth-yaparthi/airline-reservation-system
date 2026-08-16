@@ -28,6 +28,9 @@ namespace ARSBEWebApplication.Services
             if (flight == null)
                 throw new NotFoundException("Flight not found.");
 
+            if (flight.DepartureTime <= DateTime.Now)
+                throw new BadRequestException("This flight has already departed and can no longer be booked.");
+
             var seats = (await _seatRepository.GetSeatsByIdsAsync(dto.SeatIds)).ToList();
 
             if (seats.Count != dto.SeatIds.Count)

@@ -638,3 +638,19 @@ button { font-family: inherit; cursor: pointer; }
 .toast-close:hover {
   color: #fff;
 }
+
+/* ===== Departed flight state ===== */
+.boarding-pass-departed {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.boarding-pass-departed:hover {
+  box-shadow: var(--shadow-card);
+  transform: none;
+}
+
+.badge-departed {
+  background: var(--color-border);
+  color: var(--color-ink-muted);
+}

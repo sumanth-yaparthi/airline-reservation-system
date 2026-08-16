@@ -73,6 +73,12 @@ namespace ARSBEWebApplication.Services
             if (dto.EconomySeats + dto.BusinessSeats != dto.TotalSeats)
                 throw new BadRequestException("EconomySeats + BusinessSeats must equal TotalSeats.");
 
+            if (dto.DepartureTime <= DateTime.Now)
+                throw new BadRequestException("Departure time must be in the future.");
+
+            if (dto.ArrivalTime <= dto.DepartureTime)
+                throw new BadRequestException("Arrival time must be after departure time.");
+
             var flight = new Flight
             {
                 FlightNumber = dto.FlightNumber,
@@ -169,6 +175,12 @@ namespace ARSBEWebApplication.Services
             var flight = await _flightRepository.GetByIdAsync(id);
             if (flight == null)
                 throw new NotFoundException($"Flight with ID {id} not found.");
+
+            if (dto.DepartureTime <= DateTime.Now)
+                throw new BadRequestException("Departure time must be in the future.");
+
+            if (dto.ArrivalTime <= dto.DepartureTime)
+                throw new BadRequestException("Arrival time must be after departure time.");
 
             flight.FlightNumber = dto.FlightNumber;
             flight.Origin = dto.Origin;
