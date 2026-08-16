@@ -28,5 +28,12 @@ namespace ARSBEWebApplication.Controllers
             var result = await _authService.LoginAsync(dto);
             return Ok(result);
         }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult<AuthResponseDto>> Refresh(RefreshRequestDto dto)
+        {
+            var result = await _authService.RefreshAsync(dto.RefreshToken);
+            return Ok(result);
+        }
     }
 }

@@ -19,6 +19,8 @@ namespace ARSBEWebApplication.Models
         public string Role { get; set; } = "Customer"; // "Admin" or "Customer"
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiry { get; set; }
 
         public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
     }

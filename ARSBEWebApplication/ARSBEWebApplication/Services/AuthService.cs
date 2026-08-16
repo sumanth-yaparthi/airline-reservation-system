@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -40,7 +41,7 @@ namespace ARSBEWebApplication.Services
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
 
-            return BuildAuthResponse(user);
+            return await BuildAuthResponseAsync(user);
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
@@ -49,15 +50,33 @@ namespace ARSBEWebApplication.Services
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 throw new UnauthorizedException("Invalid email or password.");
 
-            return BuildAuthResponse(user);
+            return await BuildAuthResponseAsync(user);
         }
 
-        private AuthResponseDto BuildAuthResponse(User user)
+        public async Task<AuthResponseDto> RefreshAsync(string refreshToken)
+        {
+            var users = await _userRepository.FindAsync(u => u.RefreshToken == refreshToken);
+            var user = users.FirstOrDefault();
+
+            if (user == null || user.RefreshTokenExpiry == null || user.RefreshTokenExpiry < DateTime.UtcNow)
+                throw new UnauthorizedException("Refresh token is invalid or expired. Please log in again.");
+
+            return await BuildAuthResponseAsync(user);
+        }
+
+        private async Task<AuthResponseDto> BuildAuthResponseAsync(User user)
         {
             var token = GenerateJwtToken(user);
+            var refreshToken = GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryDays);
+            await _userRepository.SaveChangesAsync();
+
             return new AuthResponseDto
             {
                 Token = token,
+                RefreshToken = refreshToken,
                 FullName = user.FullName,
                 Email = user.Email,
                 Role = user.Role
@@ -85,6 +104,12 @@ namespace ARSBEWebApplication.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private static string GenerateRefreshToken()
+        {
+            var randomBytes = RandomNumberGenerator.GetBytes(64);
+            return Convert.ToBase64String(randomBytes);
         }
     }
 }

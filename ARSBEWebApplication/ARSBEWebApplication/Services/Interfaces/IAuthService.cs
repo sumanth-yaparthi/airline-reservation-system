@@ -6,5 +6,6 @@ namespace ARSBEWebApplication.Services.Interfaces
     {
         Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
         Task<AuthResponseDto> LoginAsync(LoginDto dto);
+        Task<AuthResponseDto> RefreshAsync(string refreshToken);
     }
 }
