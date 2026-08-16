@@ -12,7 +12,8 @@ namespace ARSBEWebApplication.Repositories
         public async Task<Flight?> GetByIdWithSeatsAsync(int id) =>
             await _dbSet.Include(f => f.Seats).FirstOrDefaultAsync(f => f.Id == id);
 
-        public async Task<IEnumerable<Flight>> SearchAsync(string? origin, string? destination, DateTime? date)
+        public async Task<(List<Flight> Items, int TotalCount)> SearchAsync(
+    string? origin, string? destination, DateTime? date, int pageNumber, int pageSize)
         {
             var query = _dbSet.AsQueryable();
 
@@ -25,7 +26,16 @@ namespace ARSBEWebApplication.Repositories
             if (date.HasValue)
                 query = query.Where(f => f.DepartureTime.Date == date.Value.Date);
 
-            return await query.ToListAsync();
+            query = query.OrderBy(f => f.DepartureTime);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
     }
 }

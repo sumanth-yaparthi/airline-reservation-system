@@ -16,16 +16,18 @@ namespace ARSBEWebApplication.Controllers
             _flightService = flightService;
         }
 
-        // GET /api/flights?origin=NYC&destination=LAX&date=2026-09-01
+        // GET /api/flights?origin=NYC&destination=LAX&date=2026-09-01&pageNumber=1&pageSize=6
         [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<FlightDto>>> Search(
+        public async Task<IActionResult> Search(
             [FromQuery] string? origin,
             [FromQuery] string? destination,
-            [FromQuery] DateTime? date)
+            [FromQuery] DateTime? date,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 6)
         {
-            var flights = await _flightService.SearchFlightsAsync(origin, destination, date);
-            return Ok(flights);
+            var result = await _flightService.SearchFlightsAsync(origin, destination, date, pageNumber, pageSize);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
@@ -50,6 +52,14 @@ namespace ARSBEWebApplication.Controllers
         {
             var flight = await _flightService.CreateFlightAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = flight.Id }, flight);
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<FlightDto>> Update(int id, UpdateFlightDto dto)
+        {
+            var flight = await _flightService.UpdateFlightAsync(id, dto);
+            return Ok(flight);
         }
 
         [HttpDelete("{id}")]

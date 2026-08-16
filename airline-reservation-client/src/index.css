@@ -645,3 +645,35 @@ button { font-family: inherit; cursor: pointer; }
   padding: 2px 6px;
   flex-shrink: 0;
 }
+
+/* ===== Pagination ===== */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 32px;
+}
+
+.pagination-page {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-paper-alt);
+  color: var(--color-ink-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.pagination-page:hover {
+  border-color: var(--color-amber);
+  color: var(--color-amber-dark);
+}
+
+.pagination-page-active {
+  background: var(--color-navy-950);
+  border-color: var(--color-navy-950);
+  color: #fff;
+}

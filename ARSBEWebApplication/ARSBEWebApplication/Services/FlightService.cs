@@ -1,4 +1,5 @@
-﻿using ARSBEWebApplication.DTOs.Flights;
+﻿using ARSBEWebApplication.DTOs.Common;
+using ARSBEWebApplication.DTOs.Flights;
 using ARSBEWebApplication.Exceptions;
 using ARSBEWebApplication.Models;
 using ARSBEWebApplication.Repositories.Interfaces;
@@ -17,15 +18,25 @@ namespace ARSBEWebApplication.Services
             _seatRepository = seatRepository;
         }
 
-        public async Task<IEnumerable<FlightDto>> SearchFlightsAsync(string? origin, string? destination, DateTime? date)
+        public async Task<PagedResultDto<FlightDto>> SearchFlightsAsync(
+    string? origin, string? destination, DateTime? date, int pageNumber, int pageSize)
         {
-            var flights = await _flightRepository.SearchAsync(origin, destination, date);
-            var result = new List<FlightDto>();
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
+            pageSize = pageSize < 1 ? 6 : pageSize;
 
+            var (flights, totalCount) = await _flightRepository.SearchAsync(origin, destination, date, pageNumber, pageSize);
+
+            var items = new List<FlightDto>();
             foreach (var f in flights)
-                result.Add(await MapToDtoAsync(f));
+                items.Add(await MapToDtoAsync(f));
 
-            return result;
+            return new PagedResultDto<FlightDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
 
         public async Task<FlightDto> GetFlightByIdAsync(int id)
@@ -138,6 +149,24 @@ namespace ARSBEWebApplication.Services
                 AvailableSeatsCount = availableCount,
                 Price = flight.Price
             };
+        }
+        public async Task<FlightDto> UpdateFlightAsync(int id, UpdateFlightDto dto)
+        {
+            var flight = await _flightRepository.GetByIdAsync(id);
+            if (flight == null)
+                throw new NotFoundException($"Flight with ID {id} not found.");
+
+            flight.FlightNumber = dto.FlightNumber;
+            flight.Origin = dto.Origin;
+            flight.Destination = dto.Destination;
+            flight.DepartureTime = dto.DepartureTime;
+            flight.ArrivalTime = dto.ArrivalTime;
+            flight.Price = dto.Price;
+
+            _flightRepository.Update(flight);
+            await _flightRepository.SaveChangesAsync();
+
+            return await MapToDtoAsync(flight);
         }
     }
 }

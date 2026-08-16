@@ -6,6 +6,7 @@ namespace ARSBEWebApplication.Repositories.Interfaces
     public interface IFlightRepository : IGenericRepository<Flight>
     {
         Task<Flight?> GetByIdWithSeatsAsync(int id);
-        Task<IEnumerable<Flight>> SearchAsync(string? origin, string? destination, DateTime? date);
+        Task<(List<Flight> Items, int TotalCount)> SearchAsync(
+            string? origin, string? destination, DateTime? date, int pageNumber, int pageSize);
     }
 }

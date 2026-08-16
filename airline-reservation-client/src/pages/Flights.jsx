@@ -2,8 +2,12 @@ import { useEffect, useState, useCallback } from "react";
 import axiosInstance from "../api/axiosInstance";
 import FlightCard from "../components/FlightCard";
 
+const PAGE_SIZE = 6;
+
 export default function Flights() {
   const [flights, setFlights] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageNumber, setPageNumber] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -11,12 +15,16 @@ export default function Flights() {
   const [destination, setDestination] = useState("");
   const [date, setDate] = useState("");
 
-  const fetchFlights = useCallback(async (params = {}) => {
+  const fetchFlights = useCallback(async (params = {}, page = 1) => {
     setLoading(true);
     setError("");
     try {
-      const response = await axiosInstance.get("/flights", { params });
-      setFlights(response.data);
+      const response = await axiosInstance.get("/flights", {
+        params: { ...params, pageNumber: page, pageSize: PAGE_SIZE },
+      });
+      setFlights(response.data.items);
+      setTotalPages(response.data.totalPages);
+      setPageNumber(response.data.pageNumber);
     } catch (err) {
       setError("Could not load flights. Please try again.");
     } finally {
@@ -28,20 +36,28 @@ export default function Flights() {
     fetchFlights();
   }, [fetchFlights]);
 
+  const currentFilters = () => ({
+    origin: origin || undefined,
+    destination: destination || undefined,
+    date: date || undefined,
+  });
+
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchFlights({
-      origin: origin || undefined,
-      destination: destination || undefined,
-      date: date || undefined,
-    });
+    fetchFlights(currentFilters(), 1);
   };
 
   const handleClear = () => {
     setOrigin("");
     setDestination("");
     setDate("");
-    fetchFlights();
+    fetchFlights({}, 1);
+  };
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    fetchFlights(currentFilters(), page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -83,6 +99,28 @@ export default function Flights() {
             <FlightCard key={flight.id} flight={flight} />
           ))}
         </div>
+
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button className="btn btn-outline" disabled={pageNumber === 1} onClick={() => goToPage(pageNumber - 1)}>
+              ← Prev
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                className={`pagination-page ${p === pageNumber ? "pagination-page-active" : ""}`}
+                onClick={() => goToPage(p)}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button className="btn btn-outline" disabled={pageNumber === totalPages} onClick={() => goToPage(pageNumber + 1)}>
+              Next →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
