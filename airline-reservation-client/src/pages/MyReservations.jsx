@@ -4,8 +4,15 @@ import { useToast } from "../context/ToastContext";
 
 function formatDateTime(dateStr) {
   return new Date(dateStr).toLocaleString([], {
-    month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
+}
+
+function hasDeparted(departureTimeStr) {
+  return new Date(departureTimeStr) <= new Date();
 }
 
 export default function MyReservations() {
@@ -33,21 +40,32 @@ export default function MyReservations() {
   }, [loadReservations]);
 
   const handleCancel = async (reservation) => {
-  if (!window.confirm("Cancel this reservation? This can't be undone.")) return;
+    if (!window.confirm("Cancel this reservation? This can't be undone."))
+      return;
 
-  setCancellingId(reservation.id);
-  try {
-    await axiosInstance.delete(`/reservations/${reservation.id}`);
-    setReservations((prev) =>
-      prev.map((r) => (r.id === reservation.id ? { ...r, status: "Cancelled" } : r))
-    );
-    showToast(`Reservation for ${reservation.flightNumber} cancelled.`, "success", 3500);
-  } catch (err) {
-    showToast(err.response?.data?.message || "Could not cancel reservation.", "error", 7000);
-  } finally {
-    setCancellingId(null);
-  }
-};
+    setCancellingId(reservation.id);
+    try {
+      await axiosInstance.delete(`/reservations/${reservation.id}`);
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.id === reservation.id ? { ...r, status: "Cancelled" } : r,
+        ),
+      );
+      showToast(
+        `Reservation for ${reservation.flightNumber} cancelled.`,
+        "success",
+        3500,
+      );
+    } catch (err) {
+      showToast(
+        err.response?.data?.message || "Could not cancel reservation.",
+        "error",
+        7000,
+      );
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <div className="page">
@@ -70,9 +88,13 @@ export default function MyReservations() {
               <div className="flex-between">
                 <div>
                   <span className="flight-code">{r.flightNumber}</span>
-                  <h3 style={{ marginTop: 6 }}>{r.origin} → {r.destination}</h3>
+                  <h3 style={{ marginTop: 6 }}>
+                    {r.origin} → {r.destination}
+                  </h3>
                 </div>
-                <span className={`badge ${r.status === "Cancelled" ? "badge-cancelled" : "badge-success"}`}>
+                <span
+                  className={`badge ${r.status === "Cancelled" ? "badge-cancelled" : "badge-success"}`}
+                >
                   {r.status}
                 </span>
               </div>
@@ -91,18 +113,31 @@ export default function MyReservations() {
 
               <div className="mt-16">
                 {r.seatNumbers.map((seatNum) => (
-                  <span key={seatNum} className="seat-chip">{seatNum}</span>
+                  <span key={seatNum} className="seat-chip">
+                    {seatNum}
+                  </span>
                 ))}
               </div>
 
-              {r.status !== "Cancelled" && (
+              {r.status !== "Cancelled" && !hasDeparted(r.departureTime) && (
                 <button
                   className="btn btn-danger mt-24"
                   disabled={cancellingId === r.id}
                   onClick={() => handleCancel(r)}
                 >
-                  {cancellingId === r.id ? "Cancelling..." : "Cancel reservation"}
+                  {cancellingId === r.id
+                    ? "Cancelling..."
+                    : "Cancel reservation"}
                 </button>
+              )}
+
+              {r.status !== "Cancelled" && hasDeparted(r.departureTime) && (
+                <span
+                  className="badge badge-departed mt-24"
+                  style={{ display: "inline-flex" }}
+                >
+                  Flight completed
+                </span>
               )}
             </div>
           ))}

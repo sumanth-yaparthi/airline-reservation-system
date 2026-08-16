@@ -82,11 +82,14 @@ namespace ARSBEWebApplication.Services
             if (reservation.Status == "Cancelled")
                 throw new BadRequestException("This reservation is already cancelled.");
 
+            if (reservation.Flight != null && reservation.Flight.DepartureTime <= DateTime.Now)
+                throw new BadRequestException("This flight has already departed and cannot be cancelled.");
+
             reservation.Status = "Cancelled";
 
             foreach (var rs in reservation.ReservationSeats)
                 if (rs.Seat != null)
-                    rs.Seat.IsAvailable = true; // free the seats back up
+                    rs.Seat.IsAvailable = true;
 
             await _reservationRepository.SaveChangesAsync();
         }
