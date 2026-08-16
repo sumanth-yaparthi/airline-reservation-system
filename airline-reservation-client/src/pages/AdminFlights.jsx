@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import axiosInstance from "../api/axiosInstance";
+import { useToast } from "../context/ToastContext";
 
 const emptyForm = {
   flightNumber: "",
@@ -20,6 +21,7 @@ function toLocalInputValue(isoString) {
 }
 
 export default function AdminFlights() {
+  const { showToast } = useToast();
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -96,6 +98,7 @@ export default function AdminFlights() {
           arrivalTime: form.arrivalTime,
           price: Number(form.price),
         });
+        showToast(`Flight ${form.flightNumber} updated.`, "success", 3500);
       } else {
         const economySeats = Number(form.economySeats);
         const businessSeats = Number(form.businessSeats);
@@ -110,25 +113,28 @@ export default function AdminFlights() {
           economySeats,
           businessSeats,
         });
+        showToast(`Flight ${form.flightNumber} created.`, "success", 3500);
       }
       closeForm();
       loadFlights();
     } catch (err) {
+      // Keep this one inline (formError) since it's tied to a specific form the user is actively filling out
       setFormError(err.response?.data?.message || "Could not save flight.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this flight? This can't be undone.")) return;
+  const handleDelete = async (flight) => {
+    if (!window.confirm(`Delete flight ${flight.flightNumber}? This can't be undone.`)) return;
 
-    setDeletingId(id);
+    setDeletingId(flight.id);
     try {
-      await axiosInstance.delete(`/flights/${id}`);
-      setFlights((prev) => prev.filter((f) => f.id !== id));
+      await axiosInstance.delete(`/flights/${flight.id}`);
+      setFlights((prev) => prev.filter((f) => f.id !== flight.id));
+      showToast(`Flight ${flight.flightNumber} deleted.`, "success", 3500);
     } catch (err) {
-      setError(err.response?.data?.message || "Could not delete flight.");
+      showToast(err.response?.data?.message || `Could not delete flight ${flight.flightNumber}.`, "error", 7000);
     } finally {
       setDeletingId(null);
     }
@@ -230,7 +236,7 @@ export default function AdminFlights() {
                 <button
                   className="btn btn-danger"
                   disabled={deletingId === flight.id}
-                  onClick={() => handleDelete(flight.id)}
+                  onClick={() => handleDelete(flight)}
                 >
                   {deletingId === flight.id ? "Deleting..." : "Delete"}
                 </button>

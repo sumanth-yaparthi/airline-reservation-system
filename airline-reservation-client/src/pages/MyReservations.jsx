@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import axiosInstance from "../api/axiosInstance";
+import { useToast } from "../context/ToastContext";
 
 function formatDateTime(dateStr) {
   return new Date(dateStr).toLocaleString([], {
@@ -12,6 +13,7 @@ export default function MyReservations() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cancellingId, setCancellingId] = useState(null);
+  const { showToast } = useToast();
 
   const loadReservations = useCallback(async () => {
     setLoading(true);
@@ -30,21 +32,22 @@ export default function MyReservations() {
     loadReservations();
   }, [loadReservations]);
 
-  const handleCancel = async (reservationId) => {
-    if (!window.confirm("Cancel this reservation? This can't be undone.")) return;
+  const handleCancel = async (reservation) => {
+  if (!window.confirm("Cancel this reservation? This can't be undone.")) return;
 
-    setCancellingId(reservationId);
-    try {
-      await axiosInstance.delete(`/reservations/${reservationId}`);
-      setReservations((prev) =>
-        prev.map((r) => (r.id === reservationId ? { ...r, status: "Cancelled" } : r))
-      );
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not cancel reservation.");
-    } finally {
-      setCancellingId(null);
-    }
-  };
+  setCancellingId(reservation.id);
+  try {
+    await axiosInstance.delete(`/reservations/${reservation.id}`);
+    setReservations((prev) =>
+      prev.map((r) => (r.id === reservation.id ? { ...r, status: "Cancelled" } : r))
+    );
+    showToast(`Reservation for ${reservation.flightNumber} cancelled.`, "success", 3500);
+  } catch (err) {
+    showToast(err.response?.data?.message || "Could not cancel reservation.", "error", 7000);
+  } finally {
+    setCancellingId(null);
+  }
+};
 
   return (
     <div className="page">
@@ -96,7 +99,7 @@ export default function MyReservations() {
                 <button
                   className="btn btn-danger mt-24"
                   disabled={cancellingId === r.id}
-                  onClick={() => handleCancel(r.id)}
+                  onClick={() => handleCancel(r)}
                 >
                   {cancellingId === r.id ? "Cancelling..." : "Cancel reservation"}
                 </button>

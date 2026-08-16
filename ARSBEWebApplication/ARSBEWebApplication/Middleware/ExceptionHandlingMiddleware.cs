@@ -34,6 +34,11 @@ namespace ARSBEWebApplication.Middleware
             }
         }
 
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
         private Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
             var statusCode = ex switch
@@ -56,7 +61,7 @@ namespace ARSBEWebApplication.Middleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;
 
-            var json = JsonSerializer.Serialize(response);
+            var json = JsonSerializer.Serialize(response, _jsonOptions);
             return context.Response.WriteAsync(json);
         }
     }

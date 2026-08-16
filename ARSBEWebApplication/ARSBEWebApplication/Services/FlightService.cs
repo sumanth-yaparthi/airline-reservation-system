@@ -2,6 +2,7 @@
 using ARSBEWebApplication.DTOs.Flights;
 using ARSBEWebApplication.Exceptions;
 using ARSBEWebApplication.Models;
+using ARSBEWebApplication.Repositories;
 using ARSBEWebApplication.Repositories.Interfaces;
 using ARSBEWebApplication.Services.Interfaces;
 
@@ -11,11 +12,13 @@ namespace ARSBEWebApplication.Services
     {
         private readonly IFlightRepository _flightRepository;
         private readonly ISeatRepository _seatRepository;
+        private readonly IReservationRepository _reservationRepository;
 
-        public FlightService(IFlightRepository flightRepository, ISeatRepository seatRepository)
+        public FlightService(IFlightRepository flightRepository, ISeatRepository seatRepository, IReservationRepository reservationRepository)
         {
             _flightRepository = flightRepository;
             _seatRepository = seatRepository;
+            _reservationRepository = reservationRepository;
         }
 
         public async Task<PagedResultDto<FlightDto>> SearchFlightsAsync(
@@ -102,9 +105,19 @@ namespace ARSBEWebApplication.Services
             if (flight == null)
                 throw new NotFoundException($"Flight with ID {id} not found.");
 
-            var hasActiveReservations = (await _seatRepository.FindAsync(s => s.FlightId == id && !s.IsAvailable)).Any();
-            if (hasActiveReservations)
-                throw new BadRequestException("This flight has active reservations and cannot be deleted. Cancel all bookings first.");
+            var seats = (await _seatRepository.FindAsync(s => s.FlightId == id)).ToList();
+            var hasBookedSeat = seats.Any(s => !s.IsAvailable);
+
+            if (hasBookedSeat)
+                throw new BadRequestException(
+                    $"Flight {flight.FlightNumber} ({flight.Origin} → {flight.Destination}) has one or more booked seats and cannot be deleted. Cancel all bookings first.");
+
+            var reservationsForFlight = await _reservationRepository.FindAsync(r => r.FlightId == id);
+            foreach (var reservation in reservationsForFlight)
+                _reservationRepository.Remove(reservation);
+
+            foreach (var seat in seats)
+                _seatRepository.Remove(seat);
 
             _flightRepository.Remove(flight);
             await _flightRepository.SaveChangesAsync();
